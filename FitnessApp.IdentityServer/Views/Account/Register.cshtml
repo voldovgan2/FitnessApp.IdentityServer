@@ -1,0 +1,68 @@
+﻿@model RegisterViewModel
+    <form asp-controller="account">
+        <div class="main-container-centered">
+            <div class="container-first">
+                <div class="all-elements">
+                    <img src="~/images/authentication/register.png"
+                         srcset="~/imagesauthentication/register@2x.png 2x, ~/images/authentication/register@3x.png 3x"
+                         class="image-responsive">
+                </div>
+            </div>
+            <div class="container-second">
+                <div>
+                    <h2>Sign up</h2>
+                </div>
+                <div>
+                    <label class="sign-in-sign-up-label">If you have an account with us, please sign in</label>
+                </div>
+                <partial name="_ValidationSummary" />
+                <div class="all-elements">
+                    <label>Email</label>
+                    <input type="email" asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="is-invalid"></span>
+                </div>
+                <div class="all-elements">
+                    <label>Password</label>
+                    <input type="password" asp-for="Password" class="form-control" />
+                    <span asp-validation-for="Password" class="is-invalid"></span>
+                </div>
+                <div class="all-elements">
+                    <label>Confirm Password</label>
+                    <input type="password" asp-for="ConfirmPassword" class="form-control" />
+                    <span asp-validation-for="ConfirmPassword" class="is-invalid"></span>
+                </div>
+                <div class="form-group all-elements">
+                    @foreach (var provider in Model.VisibleExternalProviders)
+                    {
+                        @if (provider.DisplayName == "Google")
+                        {
+                            <a type="button" class="btn btn-default all-elements" asp-controller="External" asp-action="Register" asp-route-provider="@provider.AuthenticationScheme" asp-route-returnUrl="@Model.ReturnUrl">
+                                <img src="~/images/authentication/google_light.png">
+                            </a>
+                        }
+                        else if (provider.DisplayName == "Facebook")
+                        {
+                            <a type="button" class="btn btn-default all-elements" asp-controller="External" asp-action="Register" asp-route-provider="@provider.AuthenticationScheme" asp-route-returnUrl="@Model.ReturnUrl">
+                                <img src="~/images/authentication/facebook_light.png">
+                            </a>
+                        }
+                        else if (provider.DisplayName == "Microsoft")
+                        {
+                            <a type="button" class="btn btn-default all-elements" asp-controller="External" asp-action="Register" asp-route-provider="@provider.AuthenticationScheme" asp-route-returnUrl="@Model.ReturnUrl">
+                                <img src="~/images/authentication/ms_light.png">
+                            </a>
+                        }
+                    }
+                </div>                
+                <div class="form-group all-elements">
+                    <button name="button" type="submit" value="register" class="sign-in-sign-up-active-button sign-in-sign-up-active-button-text">SIGN UP</button>
+                </div>
+                <div class="form-group all-elements">
+                    <button name="button" type="submit" value="login" class="sign-in-sign-up-not-active-button sign-in-sign-up-not-active-button-text">SIGN IN</button>
+                </div>
+
+            </div>
+        </div>
+    </form>
+
+

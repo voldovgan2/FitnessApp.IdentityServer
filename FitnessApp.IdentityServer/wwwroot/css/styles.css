@@ -1,0 +1,288 @@
+.sign-in-sign-up-label {
+  font-family: Roboto;
+  font-size: 16px;
+  font-weight: 300;
+  text-align: center;
+  color: #1d2539;
+}
+
+.sign-in-sign-up-active-button-text {
+  font-family: Roboto;
+  font-size: 16px;
+  text-align: center;
+  color: #fefefe;
+}
+
+.sign-in-sign-up-not-active-button-text {
+  font-family: Roboto;
+  font-size: 16px;
+  text-align: center;
+  color: #00b43e;
+}
+
+.image-responsive {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.all-elements {
+  margin: 10px;
+}
+
+.sign-in-sign-up-active-button {
+  height: 50px;
+  width: 100%;
+  border-radius: 10px;
+  box-shadow: 0px 7px 15px 0 rgba(0, 0, 0, 0.1);
+  background-image: linear-gradient(to right, #09b4a5, #38ef7d);
+}
+
+.sign-in-sign-up-active-button-centered {
+    width: 150px;
+}
+
+.sign-in-sign-up-not-active-button  {
+  height: 50px;
+  border-radius: 10px;
+  width: 100%;
+  box-shadow: 0 0 6px 0 rgba(157, 96, 212, 0.5);
+  border: solid 1px transparent;
+  background-image: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 0)), linear-gradient(to right, #09b4a5, #38ef7d);
+  background-origin: border-box;
+  background-clip: content-box, border-box;
+  box-shadow: 2px 1000px 1px #fff inset;
+}
+
+/*1200-2000*/
+
+@media screen and (min-width: 1200px) and (max-width: 2000px) {
+  .main-container-centered {
+    width: 1200px;
+    position: fixed;
+    height: 100%;
+    overflow-y: auto;
+    left: calc(50% - 600px);
+    top: 0;
+  }
+}
+
+@media screen and (min-width: 1200px) and (max-width: 2000px) {
+  .container-first {
+    float: left;
+    position: relative;
+    width: 50%;
+    right: 0;
+    height: auto;
+    padding-left: 100px;
+    padding-right: 10px;
+    padding-top: 100px;
+    padding-bottom: 100px;
+  }
+}
+
+@media screen and (min-width: 1200px) and (max-width: 2000px) {
+  .container-second {
+    float: right;
+    position: relative;
+    width: 50%;
+    left: 0;
+    height: auto;
+    text-align: center;
+    padding-left: 10px;
+    padding-right: 100px;
+    padding-top: 100px;
+    padding-bottom: 100px;
+  }
+}
+
+/*960-1200*/
+
+@media screen and (min-width: 960px) and (max-width: 1200px){
+  .main-container-centered {
+    width: auto;
+    position: fixed;
+    height: 100%;
+    overflow-y: auto;
+    left: 0;
+    top: 0;
+  }
+}
+
+@media screen and (min-width: 960px) and (max-width: 1200px){
+  .container-first {
+    float: none;
+    position: relative;
+    width: 100%;
+    height: auto;
+    padding-left: 300px;
+    padding-right: 300px;
+    padding-top: 25px;
+  }
+}
+
+@media screen and (min-width: 960px) and (max-width: 1200px){
+  .container-second {
+    position: relative;
+    width: 100%;
+    height: auto;
+    text-align: center;
+    padding-left: 300px;
+    padding-right: 300px;
+  }
+}
+
+/*800-960*/
+
+@media screen and (min-width: 800px) and (max-width: 960px){
+  .main-container-centered {
+    width: auto;
+    position: fixed;
+    height: 100%;
+    overflow-y: auto;
+    left: 0;
+    top: 0;
+  }
+}
+
+@media screen and (min-width: 800px) and (max-width: 960px){
+  .container-first {
+    float: none;
+    position: relative;
+    width: 100%;
+    height: auto;
+    padding-left: 200px;
+    padding-right: 200px;
+    padding-top: 25px;
+  }
+}
+
+@media screen and (min-width: 800px) and (max-width: 960px){
+  .container-second {
+    position: relative;
+    width: 100%;
+    height: auto;
+    text-align: center;
+    padding-left: 200px;
+    padding-right: 200px;
+  }
+}
+
+/*600-800*/
+
+@media screen and (min-width: 600px) and (max-width: 800px){
+  .main-container-centered {
+    width: auto;
+    position: fixed;
+    height: 100%;
+    overflow-y: auto;
+    left: 0;
+    top: 0;
+  }
+}
+
+@media screen and (min-width: 600px) and (max-width: 800px){
+  .container-first {
+    float: none;
+    position: relative;
+    width: 100%;
+    height: auto;
+    padding-left: 125px;
+    padding-right: 125px;
+    padding-top: 25px;
+  }
+}
+
+@media screen and (min-width: 600px) and (max-width: 800px){
+  .container-second {
+    position: relative;
+    width: 100%;
+    height: auto;
+    text-align: center;
+    padding-left: 125px;
+    padding-right: 125px;
+  }
+}
+
+/*480-600*/
+
+@media screen and (min-width: 400px) and (max-width: 600px){
+  .main-container-centered {
+    width: auto;
+    position: fixed;
+    height: 100%;
+    overflow-y: auto;
+    left: 0;
+    top: 0;
+  }
+}
+
+@media screen and (min-width: 400px) and (max-width: 600px){
+  .container-first {
+    float: none;
+    position: relative;
+    width: 100%;
+    height: auto;
+    padding-left: 50px;
+    padding-right: 50px;
+    padding-top: 10px;
+  }
+}
+
+@media screen and (min-width: 400px) and (max-width: 600px){
+  .container-second {
+    position: relative;
+    width: 100%;
+    height: auto;
+    text-align: center;
+    padding-left: 50px;
+    padding-right: 50px;
+  }
+}
+
+/*240-480*/
+
+@media screen and (min-width: 240px) and (max-width: 400px){
+  .main-container-centered {
+    width: auto;
+    position: fixed;
+    height: 100%;
+    overflow-y: auto;
+    left: 0;
+    top: 0;
+  }
+}
+
+@media screen and (min-width: 240px) and (max-width: 400px){
+  .container-first {
+    float: none;
+    position: relative;
+    width: 100%;
+    height: auto;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+}
+
+@media screen and (min-width: 240px) and (max-width: 400px){
+  .container-second {
+    position: relative;
+    width: 100%;
+    height: auto;
+    text-align: center;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 10px;
+  } 
+}
+
+.container-centered {
+    position: relative;
+    width: auto;
+    height: auto;
+    text-align: center;
+    padding: 10px;
+}
+
