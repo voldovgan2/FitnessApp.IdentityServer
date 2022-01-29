@@ -2,14 +2,16 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
+using FitnessApp.Common.Serializer.JsonSerializer;
 using FitnessApp.IdentityServer.Attributes;
 using FitnessApp.IdentityServer.Data;
 using FitnessApp.IdentityServer.Extensions;
 using FitnessApp.IdentityServer.Models.Account;
 using FitnessApp.IdentityServer.Models.Home;
 using FitnessApp.IdentityServer.Services.EmailService;
-using FitnessApp.NatsServiceBus;
-using FitnessApp.Serializer.JsonSerializer;
+using FitnessApp.ServiceBus;
+using FitnessApp.ServiceBus.AzzureServiceBus.Producer;
+using FitnessApp.ServiceBus.Messages;
 using IdentityModel;
 using IdentityServer4.Events;
 using IdentityServer4.Extensions;
@@ -45,7 +47,7 @@ namespace FitnessApp.IdentityServer.Controllers
         private readonly IAuthenticationSchemeProvider _schemeProvider;
         private readonly IEventService _events;
         private readonly IJsonSerializer _serializer;
-        private readonly IServiceBus _serviceBus;
+        private readonly IMessageProducer _messageProducer;
 
         public AccountController
         (
@@ -56,7 +58,7 @@ namespace FitnessApp.IdentityServer.Controllers
             IClientStore clientStore,
             IAuthenticationSchemeProvider schemeProvider,
             IEventService events,
-            IServiceBus serviceBus,
+            IMessageProducer messageProducer,
             IJsonSerializer serializer
         )
         {
@@ -67,7 +69,7 @@ namespace FitnessApp.IdentityServer.Controllers
             _clientStore = clientStore;
             _schemeProvider = schemeProvider;
             _events = events;
-            _serviceBus = serviceBus;
+            _messageProducer = messageProducer;
             _serializer = serializer;
         }
 
@@ -143,7 +145,7 @@ namespace FitnessApp.IdentityServer.Controllers
             }
             else
             {
-                return View("Error", new ErrorViewModel("’ÛÈ ÈÓ„Ó ÁÌ‡∫ ‰Â ˇ ∫!"));
+                return View("Error", new ErrorViewModel("Unknown error!"));
             }            
         }
 
@@ -163,7 +165,7 @@ namespace FitnessApp.IdentityServer.Controllers
                         result = await _userManager.AddToRoleAsync(user, "User");
                         if (result.Succeeded)
                         {
-                            _serviceBus.PublishEvent(IntegrationEvents.Topic.NEW_USER_REGISTERED, _serializer.SerializeToBytes(new IntegrationEvents.NewUserRegisteredEvent
+                            await _messageProducer.SendMessage(Topic.NEW_USER_REGISTERED, _serializer.SerializeToString(new NewUserRegistered
                             {
                                 UserId = userId,
                                 Email = user.Email                                

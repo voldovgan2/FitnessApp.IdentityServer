@@ -16,13 +16,13 @@ namespace FitnessApp.IdentityServer
         {
             Console.Title = "IdentityServer4";
             var host = CreateWebHostBuilder(args).Build();
-            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            if (environment == Environments.Development)
-            {
-                await DataInitializer.EnsureDefaultUsersAreCreatedAsync(host.Services);
-            }
-            await DataInitializer.EnsureAdminIsCreatedAsync(host.Services);
-            await DataInitializer.EnsureRolesAsync(host.Services);
+            //var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            //if (environment == Environments.Development)
+            //{
+            //    await DataInitializer.EnsureDefaultUsersAreCreatedAsync(host.Services);
+            //}
+            //await DataInitializer.EnsureAdminIsCreatedAsync(host.Services);
+            //await DataInitializer.EnsureRolesAsync(host.Services);
             await host.RunAsync();
         }
 

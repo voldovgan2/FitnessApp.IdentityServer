@@ -1,13 +1,12 @@
 using System;
-using System.Threading.Tasks;
 using AspNetCore.Identity.Mongo;
+using FitnessApp.Common.Serializer.JsonSerializer;
 using FitnessApp.IdentityServer.Configuration;
 using FitnessApp.IdentityServer.Data;
 using FitnessApp.IdentityServer.Services.EmailService;
-using FitnessApp.NatsServiceBus;
-using FitnessApp.Serializer.JsonSerializer;
+using FitnessApp.ServiceBus.AzzureServiceBus.Configuration;
+using FitnessApp.ServiceBus.AzzureServiceBus.Producer;
 using IdentityServer4;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -114,11 +113,11 @@ namespace FitnessApp.IdentityServer
 
             services.Configure<EmailSettings>(Configuration.GetSection("EmailSettings"));
 
-            services.Configure<NatsBusSettings>(Configuration.GetSection("Nats"));
-
             services.AddTransient<IJsonSerializer, JsonSerializer>();
 
-            services.AddTransient<IServiceBus, ServiceBus>();
+            services.Configure<AzzureServiceBusSettings>(Configuration.GetSection("AzzureServiceBusSettings"));
+
+            services.AddTransient<IMessageProducer, MessageProducer>();
 
             services.AddTransient<IEmailService, EmailService>();
         }
