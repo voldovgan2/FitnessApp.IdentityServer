@@ -6,9 +6,8 @@
 
   <ItemGroup>
     <PackageReference Include="AspNetCore.Identity.Mongo" Version="8.0.0" />
-    <PackageReference Include="FitnessApp.IntegrationEvents" Version="1.0.1" />
-    <PackageReference Include="FitnessApp.NatsServiceBus" Version="1.0.0" />
-    <PackageReference Include="FitnessApp.Serializer" Version="1.0.1" />
+    <PackageReference Include="FitnessApp.Common" Version="1.0.0" />
+    <PackageReference Include="FitnessApp.ServiceBus" Version="1.0.0" />
     <PackageReference Include="IdentityServer4" Version="3.1.4" />
     <PackageReference Include="IdentityServer4.AspNetIdentity" Version="3.1.4" />
     <PackageReference Include="IdentityServer4.Storage" Version="3.1.4" />
