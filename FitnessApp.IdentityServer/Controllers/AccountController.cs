@@ -1,38 +1,33 @@
-// Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
-
-
+using System;
+using System.Linq;
+using System.Text.Encodings.Web;
+using System.Threading.Tasks;
+using Duende.IdentityServer;
+using Duende.IdentityServer.Events;
+using Duende.IdentityServer.Extensions;
+using Duende.IdentityServer.Models;
+using Duende.IdentityServer.Services;
+using Duende.IdentityServer.Stores;
+using FitnessApp.Common.Serializer.JsonSerializer;
+using FitnessApp.Common.ServiceBus.Nats;
+using FitnessApp.Common.ServiceBus.Nats.Events;
+using FitnessApp.Common.ServiceBus.Nats.Services;
 using FitnessApp.IdentityServer.Attributes;
 using FitnessApp.IdentityServer.Data;
+using FitnessApp.IdentityServer.Exceptions;
 using FitnessApp.IdentityServer.Extensions;
 using FitnessApp.IdentityServer.Models.Account;
 using FitnessApp.IdentityServer.Models.Home;
 using FitnessApp.IdentityServer.Services.EmailService;
-using FitnessApp.NatsServiceBus;
-using FitnessApp.Serializer.JsonSerializer;
 using IdentityModel;
-using IdentityServer4.Events;
-using IdentityServer4.Extensions;
-using IdentityServer4.Models;
-using IdentityServer4.Services;
-using IdentityServer4.Stores;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Linq;
-using System.Text.Encodings.Web;
-using System.Threading.Tasks;
 
 namespace FitnessApp.IdentityServer.Controllers
 {
-    /// <summary>
-    /// This sample controller implements a typical login/logout/provision workflow for local and external accounts.
-    /// The login service encapsulates the interactions with the user data store. This data store is in-memory only and cannot be used for production!
-    /// The interaction service provides a way for the UI to communicate with identityserver for validation and context retrieval
-    /// </summary>
     [SecurityHeaders]
     [AllowAnonymous]
     public class AccountController : Controller
@@ -47,8 +42,9 @@ namespace FitnessApp.IdentityServer.Controllers
         private readonly IJsonSerializer _serializer;
         private readonly IServiceBus _serviceBus;
 
-        public AccountController
-        (
+        private const string WindowsAuthenticationSchemeName = Microsoft.AspNetCore.Server.IISIntegration.IISDefaults.AuthenticationScheme;
+
+        public AccountController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IEmailService emailService,
@@ -73,17 +69,13 @@ namespace FitnessApp.IdentityServer.Controllers
 
         #region Register
 
-        /// <summary>
-        /// Handle postback from username/password login
-        /// </summary>
         [HttpGet]
-        //public async Task<IActionResult> Register()
         public async Task<IActionResult> Register(ReturnViewModel args)
-        {            
+        {
             var schemes = await _schemeProvider.GetAllSchemesAsync();
 
             var providers = schemes.Where(x => x.DisplayName != null ||
-                            (x.Name.Equals(AccountOptions.WindowsAuthenticationSchemeName, StringComparison.OrdinalIgnoreCase)))
+                            x.Name.Equals(WindowsAuthenticationSchemeName, StringComparison.OrdinalIgnoreCase))
                 .Select(x => new ExternalProvider
                 {
                     DisplayName = x.DisplayName,
@@ -98,9 +90,6 @@ namespace FitnessApp.IdentityServer.Controllers
             return View(vm);
         }
 
-        /// <summary>
-        /// Handle postback from username/password login
-        /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model, string button)
@@ -108,18 +97,19 @@ namespace FitnessApp.IdentityServer.Controllers
             if (button == "register")
             {
                 if (ModelState.IsValid)
-                {                    
+                {
                     var existingUseruser = await _userManager.FindByEmailAsync(model.Email);
                     if (existingUseruser != null)
                     {
                         await _userManager.DeleteAsync(existingUseruser);
                     }
+
                     var user = new ApplicationUser(model.Email);
                     var result = await _userManager.CreateAsync(user, model.Password);
                     if (result.Succeeded)
                     {
                         var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                        var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, Request.Scheme);
+                        var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code }, Request.Scheme);
                         await _emailService.SendEmailAsync(model.Email, "Confirm your email", $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
                         return View("RegistrationCompleted", new RegistrationCompletedViewModel { Result = "Registration successful, please confirm your email." });
                     }
@@ -144,7 +134,7 @@ namespace FitnessApp.IdentityServer.Controllers
             else
             {
                 return View("Error", new ErrorViewModel("’ÛÈ ÈÓ„Ó ÁÌ‡∫ ‰Â ˇ ∫!"));
-            }            
+            }
         }
 
         [AllowAnonymous]
@@ -163,10 +153,10 @@ namespace FitnessApp.IdentityServer.Controllers
                         result = await _userManager.AddToRoleAsync(user, "User");
                         if (result.Succeeded)
                         {
-                            _serviceBus.PublishEvent(IntegrationEvents.Topic.NEW_USER_REGISTERED, _serializer.SerializeToBytes(new IntegrationEvents.NewUserRegisteredEvent
+                            _serviceBus.PublishEvent(Topic.NEW_USER_REGISTERED, _serializer.SerializeToBytes(new NewUserRegistered
                             {
                                 UserId = userId,
-                                Email = user.Email                                
+                                Email = user.Email
                             }));
                             model.Result = true;
                             model.Data = "Thank you for confirming your email.";
@@ -192,8 +182,9 @@ namespace FitnessApp.IdentityServer.Controllers
             else
             {
                 model.Result = false;
-                model.Data ="Invalid user id or confirmation code.";
+                model.Data = "Invalid user id or confirmation code.";
             }
+
             return View("ConfirmEmailResult", model);
         }
 
@@ -201,9 +192,6 @@ namespace FitnessApp.IdentityServer.Controllers
 
         #region Login
 
-        /// <summary>
-        /// Entry point into the login workflow
-        /// </summary>
         [HttpGet]
         public async Task<IActionResult> Login(string returnUrl)
         {
@@ -219,16 +207,13 @@ namespace FitnessApp.IdentityServer.Controllers
             return View(vm);
         }
 
-        /// <summary>
-        /// Handle postback from username/password login
-        /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginInputViewModel model, string button)
         {
             if (button == "register")
-            {                
-                return RedirectToAction("Register",new ReturnViewModel { ReturnUrl = model.ReturnUrl });
+            {
+                return RedirectToAction("Register", new ReturnViewModel { ReturnUrl = model.ReturnUrl });
             }
             else if (button == "forgot")
             {
@@ -244,13 +229,13 @@ namespace FitnessApp.IdentityServer.Controllers
                 {
                     if (context != null)
                     {
-                        // if the user cancels, send a result back into IdentityServer as if they 
+                        // if the user cancels, send a result back into IdentityServer as if they
                         // denied the consent (even if this client does not require consent).
                         // this will send back an access denied OIDC error response to the client.
-                        await _interaction.GrantConsentAsync(context, ConsentResponse.Denied);
+                        await _interaction.GrantConsentAsync(context, new ConsentResponse());
 
                         // we can trust model.ReturnUrl since GetAuthorizationContextAsync returned non-null
-                        if (await _clientStore.IsPkceClientAsync(context.ClientId))
+                        if (await _clientStore.IsPkceClient(context.Client.ClientId))
                         {
                             // if the client is PKCE then we assume it's native, so this change in how to
                             // return the response is for better UX for the end user.
@@ -272,26 +257,26 @@ namespace FitnessApp.IdentityServer.Controllers
                     if (result.Succeeded)
                     {
                         var user = await _userManager.FindByEmailAsync(model.Email);
-                        await _events.RaiseAsync(new UserLoginSuccessEvent(user.Email, user.Id, user.Email, clientId: context?.ClientId));
+                        await _events.RaiseAsync(new UserLoginSuccessEvent(user.Email, user.Id, user.Email, clientId: context?.Client.ClientId));
 
-                        // only set explicit expiration here if user chooses "remember me". 
+                        // only set explicit expiration here if user chooses "remember me".
                         // otherwise we rely upon expiration configured in cookie middleware.
                         AuthenticationProperties props = null;
-                        if (AccountOptions.AllowRememberLogin && model.RememberLogin)
+                        if (model.RememberLogin)
                         {
                             props = new AuthenticationProperties
                             {
                                 IsPersistent = true,
-                                ExpiresUtc = DateTimeOffset.UtcNow.Add(AccountOptions.RememberMeLoginDuration)
+                                ExpiresUtc = DateTimeOffset.UtcNow.Add(TimeSpan.FromDays(30))
                             };
-                        };
+                        }
 
                         // issue authentication cookie with subject ID and username
-                        await HttpContext.SignInAsync(user.Id, user.Email, props);
+                        await HttpContext.SignIn(user.Id, user.Email, props);
 
                         if (context != null)
                         {
-                            if (await _clientStore.IsPkceClientAsync(context.ClientId))
+                            if (await _clientStore.IsPkceClient(context.Client.ClientId))
                             {
                                 // if the client is PKCE then we assume it's native, so this change in how to
                                 // return the response is for better UX for the end user.
@@ -314,12 +299,12 @@ namespace FitnessApp.IdentityServer.Controllers
                         else
                         {
                             // user might have clicked on a malicious link - should be logged
-                            throw new Exception("invalid return URL");
+                            throw new IdentityException("invalid return URL");
                         }
                     }
 
-                    await _events.RaiseAsync(new UserLoginFailureEvent(model.Email, "invalid credentials", clientId: context?.ClientId));
-                    ModelState.AddModelError(string.Empty, AccountOptions.InvalidCredentialsErrorMessage);
+                    await _events.RaiseAsync(new UserLoginFailureEvent(model.Email, "invalid credentials", clientId: context?.Client.ClientId));
+                    ModelState.AddModelError(string.Empty, "Invalid username or password");
                 }
 
                 // something went wrong, show form with error
@@ -333,13 +318,12 @@ namespace FitnessApp.IdentityServer.Controllers
             var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
             if (context?.IdP != null && await _schemeProvider.GetSchemeAsync(context.IdP) != null)
             {
-                var local = context.IdP == IdentityServer4.IdentityServerConstants.LocalIdentityProvider;
+                var local = context.IdP == IdentityServerConstants.LocalIdentityProvider;
 
                 // this is meant to short circuit the UI and only trigger the one external IdP
                 var vm = new LoginViewModel
                 {
                     EnableLocalLogin = local,
-                    //ReturnUrl = returnUrl,
                     Email = context?.LoginHint,
                 };
 
@@ -355,7 +339,7 @@ namespace FitnessApp.IdentityServer.Controllers
 
             var providers = schemes
                 .Where(x => x.DisplayName != null ||
-                            (x.Name.Equals(AccountOptions.WindowsAuthenticationSchemeName, StringComparison.OrdinalIgnoreCase))
+                            x.Name.Equals(WindowsAuthenticationSchemeName, StringComparison.OrdinalIgnoreCase)
                 )
                 .Select(x => new ExternalProvider
                 {
@@ -364,9 +348,9 @@ namespace FitnessApp.IdentityServer.Controllers
                 }).ToList();
 
             var allowLocal = true;
-            if (context?.ClientId != null)
+            if (context?.Client.ClientId != null)
             {
-                var client = await _clientStore.FindEnabledClientByIdAsync(context.ClientId);
+                var client = await _clientStore.FindEnabledClientByIdAsync(context.Client.ClientId);
                 if (client != null)
                 {
                     allowLocal = client.EnableLocalLogin;
@@ -380,8 +364,8 @@ namespace FitnessApp.IdentityServer.Controllers
 
             return new LoginViewModel
             {
-                AllowRememberLogin = AccountOptions.AllowRememberLogin,
-                EnableLocalLogin = allowLocal && AccountOptions.AllowLocalLogin,
+                AllowRememberLogin = true,
+                EnableLocalLogin = allowLocal,
                 ReturnUrl = returnUrl,
                 Email = context?.LoginHint,
                 ExternalProviders = providers.ToArray()
@@ -400,43 +384,41 @@ namespace FitnessApp.IdentityServer.Controllers
 
         #region Forgot passowrd
 
-        /// <summary>
-        /// Handle postback from username/password login
-        /// </summary>
         [HttpGet]
-        public async Task<IActionResult> ForgotPassword()
+        public IActionResult ForgotPassword()
         {
             return View("ForgotPassword");
         }
-                
+
         [HttpPost]
         public async Task<ActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
-            if(ModelState.IsValid)
+            if (ModelState.IsValid)
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
                 if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
                 {
                     return View("Error", new ErrorViewModel("User Was Not Found"));
                 }
+
                 var code = await _userManager.GeneratePasswordResetTokenAsync(user);
                 var callbackUrl = Url.Action("ResetPassword", "Account", new { code = code, email = model.Email }, Request.Scheme);
                 await _emailService.SendEmailAsync(model.Email, "Reset Password", $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
                 return View("ForgotPasswordCompleted", new ForgotPasswordResultViewModel { Message = "Reset password confirmation email was sent, please check your email box and confirm it." });
             }
             else
-            {               
+            {
                 return View(new ForgotPasswordViewModel());
             }
         }
 
         [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> ResetPassword(string code, string email)
+        public IActionResult ResetPassword(string code, string email)
         {
             if (code != null)
             {
-                ResetPasswordViewModel model = new ResetPasswordViewModel() { Code = code, Email= email };
+                ResetPasswordViewModel model = new ResetPasswordViewModel() { Code = code, Email = email };
                 return View("ConfirmResetPassword", model);
             }
             else
@@ -469,6 +451,7 @@ namespace FitnessApp.IdentityServer.Controllers
                 {
                     resultModel = new ConfirmResetPasswordResultModel(false, "User was not found");
                 }
+
                 return View("ConfirmResetPasswordResult", resultModel);
             }
             else
@@ -481,16 +464,13 @@ namespace FitnessApp.IdentityServer.Controllers
 
         #region Logout
 
-        /// <summary>
-        /// Show logout page
-        /// </summary>
         [HttpGet]
         public async Task<IActionResult> Logout(string logoutId)
-        {            
+        {
             // build a model so the logout page knows what to display
             var vm = await BuildLogoutViewModelAsync(logoutId);
 
-            if (vm.ShowLogoutPrompt == false)
+            if (!vm.ShowLogoutPrompt)
             {
                 // if the request for logout was properly authenticated from IdentityServer, then
                 // we don't need to show the prompt and can just log the user out directly.
@@ -500,9 +480,6 @@ namespace FitnessApp.IdentityServer.Controllers
             return View(vm);
         }
 
-        /// <summary>
-        /// Handle logout page postback
-        /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout(LogoutInputModel model)
@@ -536,7 +513,7 @@ namespace FitnessApp.IdentityServer.Controllers
 
         private async Task<LogoutViewModel> BuildLogoutViewModelAsync(string logoutId)
         {
-            var vm = new LogoutViewModel { LogoutId = logoutId, ShowLogoutPrompt = AccountOptions.ShowLogoutPrompt };
+            var vm = new LogoutViewModel { LogoutId = logoutId, ShowLogoutPrompt = true };
 
             if (User?.Identity.IsAuthenticated != true)
             {
@@ -565,7 +542,7 @@ namespace FitnessApp.IdentityServer.Controllers
 
             var vm = new LoggedOutViewModel
             {
-                AutomaticRedirectAfterSignOut = AccountOptions.AutomaticRedirectAfterSignOut,
+                AutomaticRedirectAfterSignOut = false,
                 PostLogoutRedirectUri = logout?.PostLogoutRedirectUri,
                 ClientName = string.IsNullOrEmpty(logout?.ClientName) ? logout?.ClientId : logout?.ClientName,
                 SignOutIframeUrl = logout?.SignOutIFrameUrl,
@@ -575,9 +552,9 @@ namespace FitnessApp.IdentityServer.Controllers
             if (User?.Identity.IsAuthenticated == true)
             {
                 var idp = User.FindFirst(JwtClaimTypes.IdentityProvider)?.Value;
-                if (idp != null && idp != IdentityServer4.IdentityServerConstants.LocalIdentityProvider)
+                if (idp != null && idp != IdentityServerConstants.LocalIdentityProvider)
                 {
-                    var providerSupportsSignout = await HttpContext.GetSchemeSupportsSignOutAsync(idp);
+                    var providerSupportsSignout = await HttpContext.GetSchemeSupportsSignOut(idp);
                     if (providerSupportsSignout)
                     {
                         if (vm.LogoutId == null)

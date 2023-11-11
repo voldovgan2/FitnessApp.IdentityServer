@@ -1,6 +1,3 @@
-// Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
-
 using System.ComponentModel.DataAnnotations;
 
 namespace FitnessApp.IdentityServer.Models.Account
@@ -11,6 +8,6 @@ namespace FitnessApp.IdentityServer.Models.Account
         public string Email { get; set; }
         [Required]
         public string Password { get; set; }
-        public bool RememberLogin { get; set; }       
+        public bool RememberLogin { get; set; }
     }
 }
