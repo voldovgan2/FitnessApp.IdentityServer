@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using AspNetCore.Identity.Mongo;
 using Duende.IdentityServer;
 using Duende.IdentityServer.Test;
-using FitnessApp.Common.Configuration.Nats;
+using FitnessApp.Common.Configuration;
 using FitnessApp.Common.Serializer.JsonSerializer;
 using FitnessApp.IdentityServer;
 using FitnessApp.IdentityServer.Configuration;
