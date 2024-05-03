@@ -5,7 +5,6 @@ using Duende.IdentityServer;
 using Duende.IdentityServer.Test;
 using FitnessApp.Common.Configuration.Nats;
 using FitnessApp.Common.Serializer.JsonSerializer;
-using FitnessApp.Common.ServiceBus.Nats.Services;
 using FitnessApp.IdentityServer;
 using FitnessApp.IdentityServer.Configuration;
 using FitnessApp.IdentityServer.Data;
@@ -17,7 +16,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
-using NATS.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -76,14 +74,9 @@ builder.Services
     });
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-
-builder.Services.Configure<ServiceBusSettings>(builder.Configuration.GetSection("ServiceBus"));
+builder.Services.ConfigureNats(builder.Configuration);
 
 builder.Services.AddTransient<IJsonSerializer, JsonSerializer>();
-
-builder.Services.AddTransient<IConnectionFactory, ConnectionFactory>();
-
-builder.Services.AddTransient<IServiceBus, ServiceBus>();
 
 builder.Services.AddTransient<IEmailService, EmailService>();
 
