@@ -3,7 +3,7 @@
 namespace FitnessApp.IdentityServer.Models.Account
 {
     public class RegisterInputViewModel : ReturnViewModel
-    { 
+    {
         [Required]
         public string Email { get; set; }
         [Required]
