@@ -8,7 +8,7 @@ using Duende.IdentityServer.Extensions;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Stores;
-using FitnessApp.Common.Serializer.JsonSerializer;
+using FitnessApp.Common.Serializer;
 using FitnessApp.Common.ServiceBus.Nats;
 using FitnessApp.Common.ServiceBus.Nats.Events;
 using FitnessApp.Common.ServiceBus.Nats.Services;
@@ -39,7 +39,6 @@ namespace FitnessApp.IdentityServer.Controllers
         private readonly IClientStore _clientStore;
         private readonly IAuthenticationSchemeProvider _schemeProvider;
         private readonly IEventService _events;
-        private readonly IJsonSerializer _serializer;
         private readonly IServiceBus _serviceBus;
 
         private const string WindowsAuthenticationSchemeName = Microsoft.AspNetCore.Server.IISIntegration.IISDefaults.AuthenticationScheme;
@@ -52,9 +51,7 @@ namespace FitnessApp.IdentityServer.Controllers
             IClientStore clientStore,
             IAuthenticationSchemeProvider schemeProvider,
             IEventService events,
-            IServiceBus serviceBus,
-            IJsonSerializer serializer
-        )
+            IServiceBus serviceBus)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -64,7 +61,6 @@ namespace FitnessApp.IdentityServer.Controllers
             _schemeProvider = schemeProvider;
             _events = events;
             _serviceBus = serviceBus;
-            _serializer = serializer;
         }
 
         #region Register
@@ -153,7 +149,7 @@ namespace FitnessApp.IdentityServer.Controllers
                         result = await _userManager.AddToRoleAsync(user, "User");
                         if (result.Succeeded)
                         {
-                            _serviceBus.PublishEvent(Topic.NEW_USER_REGISTERED, _serializer.SerializeToBytes(new NewUserRegistered
+                            _serviceBus.PublishEvent(Topic.NEW_USER_REGISTERED, JsonConvertHelper.SerializeToBytes(new NewUserRegistered
                             {
                                 UserId = userId,
                                 Email = user.Email
