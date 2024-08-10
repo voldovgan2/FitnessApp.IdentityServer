@@ -4,7 +4,6 @@ using AspNetCore.Identity.Mongo;
 using Duende.IdentityServer;
 using Duende.IdentityServer.Test;
 using FitnessApp.Common.Configuration;
-using FitnessApp.Common.Serializer.JsonSerializer;
 using FitnessApp.IdentityServer;
 using FitnessApp.IdentityServer.Configuration;
 using FitnessApp.IdentityServer.Data;
@@ -76,9 +75,8 @@ builder.Services
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.ConfigureNats(builder.Configuration);
 
-builder.Services.AddTransient<IJsonSerializer, JsonSerializer>();
-
 builder.Services.AddTransient<IEmailService, EmailService>();
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -95,6 +93,7 @@ app.UseIdentityServer();
 app.UseAuthentication();
 app.UseStaticFiles();
 app.UseMvcWithDefaultRoute();
+app.MapHealthChecks("/health");
 
 app.Run();
 
